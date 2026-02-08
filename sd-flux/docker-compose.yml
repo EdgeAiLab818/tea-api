@@ -1,0 +1,29 @@
+services:
+  flux-app:
+    build: .
+    container_name: flux-app
+    restart: always
+    volumes:
+      - .:/app
+      - ./models:/models
+      - ./outputs:/outputs
+    working_dir: /app
+    networks:
+      - edgeai-shared-net
+    environment:
+      - VIRTUAL_HOST=flux.edgeailab.jp
+      - VIRTUAL_PORT=7860
+      - HF_TOKEN=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
+    command: python /app/app.py
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    tty: true
+
+networks:
+  edgeai-shared-net:
+    external: true

@@ -1,0 +1,23 @@
+services:
+  yolo-app:
+    build: ./yolov8
+    container_name: yolo-app
+    restart: always
+    volumes:
+      - ./yolov8:/app
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - VIRTUAL_HOST=yolo.edgeailab.jp
+      - VIRTUAL_PORT=8888
+    networks:
+      - edgeai-shared-net
+
+networks:
+  edgeai-shared-net:
+    external: true

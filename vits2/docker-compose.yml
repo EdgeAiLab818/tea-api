@@ -1,0 +1,36 @@
+services:
+  vits2-app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: vits2-app
+    restart: always
+    volumes:
+      - ./app:/app
+      - ./model_assets:/app/model_assets
+      - ./input:/app/inputs
+      - ./hf_cache:/root/.cache/huggingface
+      - ./bert_models:/usr/local/lib/python3.10/dist-packages/bert/deberta-v2-large-japanese-char-wwm
+    tty: true
+    stdin_open: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "5000:5000"
+    environment:
+      - VIRTUAL_HOST=vits2.edgeailab.jp
+      - VIRTUAL_PORT=5000
+      - HF_TOKEN=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
+      - HF_HUB_ENABLE_HF_TRANSFER=1
+
+    networks:
+      - edgeai-shared-net
+
+networks:
+  edgeai-shared-net:
+    external: true

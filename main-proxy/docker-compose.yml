@@ -1,0 +1,32 @@
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: main-nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/tmp/docker.sock:ro # Dockerの動きを監視
+      - ./vhost.d:/etc/nginx/vhost.d:ro
+      - ./conf.d:/etc/nginx/conf.d
+      - /etc/letsencrypt/live/edgeailab.jp/fullchain.pem:/etc/nginx/certs/yolo.edgeailab.jp.crt:ro
+      - /etc/letsencrypt/live/edgeailab.jp/privkey.pem:/etc/nginx/certs/yolo.edgeailab.jp.key:ro
+      - /etc/letsencrypt/live/edgeailab.jp/fullchain.pem:/etc/nginx/certs/sdxl.edgeailab.jp.crt:ro
+      - /etc/letsencrypt/live/edgeailab.jp/privkey.pem:/etc/nginx/certs/sdxl.edgeailab.jp.key:ro
+      - /etc/letsencrypt/live/edgeailab.jp/fullchain.pem:/etc/nginx/certs/flux.edgeailab.jp.crt:ro
+      - /etc/letsencrypt/live/edgeailab.jp/privkey.pem:/etc/nginx/certs/flux.edgeailab.jp.key:ro
+      - /etc/letsencrypt/live/edgeailab.jp/fullchain.pem:/etc/nginx/certs/vits2.edgeailab.jp.crt:ro
+      - /etc/letsencrypt/live/edgeailab.jp/privkey.pem:/etc/nginx/certs/vits2.edgeailab.jp.key:ro
+      - /etc/letsencrypt/live/edgeailab.jp/fullchain.pem:/etc/nginx/certs/tea.edgeailab.jp.crt:ro
+      - /etc/letsencrypt/live/edgeailab.jp/privkey.pem:/etc/nginx/certs/tea.edgeailab.jp.key:ro
+    networks:
+      - edgeai-shared-net
+    restart: always
+
+networks:
+  edgeai-shared-net:
+    external: true
+
+volumes:
+  certs:

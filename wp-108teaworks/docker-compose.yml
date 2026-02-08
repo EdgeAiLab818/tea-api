@@ -1,0 +1,41 @@
+services:
+  108teaworks_db:
+    image: mariadb:latest
+    container_name: wp-108tea-db
+    # restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Ht!07190505
+      MYSQL_DATABASE: 108teaworks_db
+      MYSQL_USER: 108teaworks
+      MYSQL_PASSWORD: Ht!07190505
+    volumes:
+      - ./db_data:/var/lib/mysql
+    networks:
+      - wp-net
+
+  wp-108teaworks:
+    image: wordpress:latest
+    container_name: wp-108tea-app
+    # restart: always
+    depends_on:
+      - 108teaworks_db
+    environment:
+      WORDPRESS_DB_HOST: 108teaworks_db
+      WORDPRESS_DB_USER: 108teaworks
+      WORDPRESS_DB_PASSWORD: Ht!07190505
+      WORDPRESS_DB_NAME: 108teaworks_db
+      VIRTUAL_HOST: www2.108teaworks.com
+      LETSENCRYPT_HOST: www2.108teaworks.com
+      VIRTUAL_PORT: 80
+      VIRTUAL_PROTO: http
+    volumes:
+      - ./wp_data:/var/www/html
+    networks:
+      - wp-net
+      - edgeai-shared-net
+
+networks:
+  wp-net:
+    external: true
+  edgeai-shared-net:
+    external: true

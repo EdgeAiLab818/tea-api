@@ -1,0 +1,40 @@
+services:
+  edgeailab_db:
+    image: mariadb:latest
+    #restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Ts!07190505
+      MYSQL_DATABASE: edgeailab_db
+      MYSQL_USER: edgeailab
+      MYSQL_PASSWORD: Ts!07190505
+    volumes:
+      - ./db_data:/var/lib/mysql
+    networks:
+      - wp-net
+
+  wp-edgeailab:
+    image: wordpress:latest
+    container_name: wp-edgeai-app
+    restart: always
+    depends_on:
+      - edgeailab_db
+    environment:
+      WORDPRESS_DB_HOST: edgeailab_db
+      WORDPRESS_DB_USER: edgeailab
+      WORDPRESS_DB_PASSWORD: Ts!07190505
+      WORDPRESS_DB_NAME: edgeailab_db
+      VIRTUAL_HOST: edgeailab.jp,www.edgeailab.jp
+      LETSENCRYPT_HOST: edgeailab.jp,www.edgeailab.jp
+      VIRTUAL_PORT: 80
+      VIRTUAL_PROTO: http
+    volumes:
+      - ./wp_data:/var/www/html
+    networks:
+      - wp-net
+      - edgeai-shared-net
+
+networks:
+  wp-net:
+    external: true
+  edgeai-shared-net:
+    external: true
