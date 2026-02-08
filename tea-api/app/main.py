@@ -7,8 +7,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import OllamaEmbeddings
+#from langchain_community.vectorstores import Chroma
+#from langchain_community.embeddings import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
+from langchain_chroma import Chroma
 
 # --- 設定 ---
 OLLAMA_URL = "http://ollama:11434"
@@ -70,12 +72,15 @@ async def ask(req: AskRequest):
 質問: {req.question}
 
 【思考・回答プロセス】:
-1. **網羅性の確保**: 【データ】内の商品を全て見つけ出してください（ほうじ茶パウダー、お得用等も含む）。
-2. **情報の必須化**: 「税込価格」を必ずセットで抽出してください。
-3. **重複の厳禁**: 同じ商品を二度リストアップしないでください。一意のリストを作成してください。
-4. **捏造禁止**: 【データ】にない商品名や価格は絶対に書かないでください。
+1. **条件の把握**: 予算（5000円以内など）や目的（親戚へのプレゼント）を特定します。
+2. **フィルタリング**: 予算を1円でも超える単品商品は、この提案からは完全に除外してください。
+3. **組み合わせ計算**:
+    - 単品での提案だけでなく、複数の商品を組み合わせたセット（例：A+B = 合計金額）を2〜3パターン作成してください。
+    - 組み合わせた合計金額が予算内に収まっていることを必ず計算して確認してください。
+4. **根拠の提示**: なぜその組み合わせがおすすめなのか、理由（味の違いを楽しめる、保存が効く等）を【データ】から引用してください。
+5. **捏造禁止**: 【データ】にない価格や商品は絶対に作らないでください
 """
-    
+
     async with httpx.AsyncClient(timeout=None) as client:
         logic_resp = await client.post(
             f"{OLLAMA_URL}/api/generate", 
