@@ -28,8 +28,8 @@ vector_db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings) if o
 # --- 補助関数 ---
 
 async def generate_search_queries(question: str):
-    """質問から検索用のクエリを最適化"""
-    return f"{question} お茶 商品 一覧"
+    """質問が何であれ、必ず「商品リスト」と「送料」を検索対象に含める"""
+    return f"products.json master_products 商品一覧 価格 {question}"
 
 async def route_question_with_weights(question: str):
     """質問内容に基づいて、商品データ(short)と詳細情報(medium)の重みを決定"""
@@ -75,16 +75,21 @@ async def ask(req: AskRequest):
 
     # ステップ3: ロジック解決（厳格なデータ参照ルール）
     # 出典ファイル名を指定することでハルシネーションを強力に抑制します
-    logic_prompt = f"""あなたは藤八茶寮の店主として、正確な「計算」と「提案」を行います。
+    logic_prompt = f"""あなたは藤八茶寮の店主（コンシェルジュ）です。
+お客様からの質問に対し、提供された【データ】のみを根拠として、誠実かつ正確に回答してください。
 
-【データ（検索結果）】:
+【データ】:
 {context}
 
-【厳守ルール】:
-1. 回答に必要な「商品名」「価格」は、出典が knowledge/short/master_products.md であるデータのみを根拠にしてください。
-2. 上記データに記載のない商品は、絶対に提案に含めないでください。
-3. 商品A + 商品B = 合計金額 を、データ上の価格で正確に計算してください。
-4. 予算（5000円以内など）に合う組み合わせがない場合は「ご提案できる組み合わせがございません」と回答してください。
+【行動原則】:
+1. **意図の特定**: 質問が「商品提案」「配送の確認」「お茶の特徴」「店舗の想い」のどれにあたるかを判断し、最適な情報を【データ】から抽出してください。
+2. **条件の厳守（提案・計算時）**: 
+   - 予算、個数、場所などの「制約」が質問に含まれる場合、それを数学的に1円・1つも違わずに守ってください。
+   - もし条件に完全に合致するものが【データ】にない場合は、嘘をつかず「あいにく条件に合うものがございませんが、こちらはいかがでしょう」と正直に伝えてください。
+3. **情報の純度**: 
+   - 【データ】にない商品（茶碗、お菓子、他県産品など）は一切出さないでください。
+   - 内部的な思考プロセス（計算リストや検索順位など）はお客様に見せず、完成された「接客文」のみを出力してください。
+4. **ブランドの統一**: 伊勢茶の専門店として、落ち着いた丁寧な言葉遣いで回答してください。
 
 質問: {req.question}
 """
@@ -117,10 +122,11 @@ async def ask(req: AskRequest):
             f"{OLLAMA_URL}/api/generate", 
             json={"model": MODEL_NAME, "prompt": clean_up_prompt, "stream": False, "options": {"temperature": 0.0}}
         )
-        
+
         return {
             "answer": final_resp.json().get("response"),
             "weights": weights,
+            "debug_context": context,
             "debug_raw_logic": raw_answer
         }
 
